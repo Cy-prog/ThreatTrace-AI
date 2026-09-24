@@ -1,0 +1,27 @@
+[project]
+name = "threattrace-ai-service"
+version = "1.0.0"
+description = "ThreatTrace AI Natural Language Threat Intelligence & Risk Scoring Engine"
+authors = [{ name = "ThreatTrace AI Team", email = "security@threattrace.io" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "pydantic>=2.6.0",
+    "scikit-learn>=1.4.0",
+    "textblob>=0.18.0",
+    "langdetect>=1.0.9",
+    "numpy>=1.26.0"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]

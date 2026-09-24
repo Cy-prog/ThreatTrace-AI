@@ -1,0 +1,39 @@
+name: Docker Container Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-containers:
+    name: Build & Validate Multi-Tier Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: actions/docker-buildx-action@v3
+
+      - name: Build AI Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ai-service
+          push: false
+          tags: threattrace/ai-service:test
+
+      - name: Build Backend Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          tags: threattrace/backend:test
+
+      - name: Build Frontend Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false
+          tags: threattrace/frontend:test

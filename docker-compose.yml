@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: threattrace-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-threattrace_db}
+      POSTGRES_USER: ${DB_USER:-threattrace_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-threattrace_secure_pass_2026}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-threattrace_user} -d ${DB_NAME:-threattrace_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - threattrace-net
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: threattrace-ai-service
+    restart: unless-stopped
+    environment:
+      - PORT=8000
+      - ENVIRONMENT=production
+      - API_KEY=${AI_SERVICE_API_KEY:-ThreatTrace-Internal-AI-Key-2026-Secure}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - threattrace-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: threattrace-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/${DB_NAME:-threattrace_db}
+      - DB_USER=${DB_USER:-threattrace_user}
+      - DB_PASSWORD=${DB_PASSWORD:-threattrace_secure_pass_2026}
+      - JWT_SECRET=${JWT_SECRET:-4c69717569645365637572697479546872656174547261636541495365637265744b657932303236}
+      - AI_SERVICE_URL=http://ai-service:8000
+      - AI_SERVICE_API_KEY=${AI_SERVICE_API_KEY:-ThreatTrace-Internal-AI-Key-2026-Secure}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - threattrace-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: threattrace-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - threattrace-net
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  threattrace-net:
+    driver: bridge

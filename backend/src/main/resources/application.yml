@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: threattrace-backend
+  profiles:
+    active: dev
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+
+threattrace:
+  jwt:
+    secret: ${JWT_SECRET:4c69717569645365637572697479546872656174547261636541495365637265744b657932303236}
+    expiration-ms: ${JWT_EXPIRATION_MS:900000} # 15 minutes
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
+  ai-service:
+    url: ${AI_SERVICE_URL:http://localhost:8000}
+    api-key: ${AI_SERVICE_API_KEY:ThreatTrace-Internal-AI-Key-2026-Secure}
+    timeout-ms: 5000
+  demo-mode: ${DEMO_MODE:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
