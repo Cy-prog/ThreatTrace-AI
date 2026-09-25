@@ -50,7 +50,9 @@ jobs:
 
       - name: Run AI Microservice Pytest Suite
         working-directory: ai-service
-        run: pytest tests -v
+        env:
+          PYTHONPATH: .
+        run: python -m pytest tests -v
 
   frontend-build:
     name: Frontend (React 18 / Vite / TypeScript)
