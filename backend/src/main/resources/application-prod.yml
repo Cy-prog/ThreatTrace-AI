@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/threattrace_db}
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:threattrace_db}}}
     username: ${DB_USER:threattrace_user}
     password: ${DB_PASSWORD:threattrace_secure_pass_2026}
     driver-class-name: org.postgresql.Driver
