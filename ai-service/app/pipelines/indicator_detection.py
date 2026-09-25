@@ -34,7 +34,7 @@ def detect_indicators(text: str) -> List[ThreatIndicator]:
         ))
 
     # 3. DEMAND_LANGUAGE
-    demand_m = re.search(r'\b(if\s+.*not\s+transferred|pay\s+.*\b(btc|bitcoin|\$|ransom)|wire funds|or else|ransom demand)\b', lower)
+    demand_m = re.search(r'\b(if\s+.{0,60}?not\s+transferred|pay\s+.{0,60}?\b(btc|bitcoin|\$|ransom)|wire funds|or else|ransom demand)\b', lower)
     if demand_m:
         indicators.append(ThreatIndicator(
             indicator_type="DEMAND_LANGUAGE",
@@ -44,7 +44,7 @@ def detect_indicators(text: str) -> List[ThreatIndicator]:
         ))
 
     # 4. IMMINENCE_SIGNAL
-    imminent_m = re.search(r'\b(tomorrow|tonight|within\s+\d+\s+hours|at\s+\d{1,2}:\d{2}|deadline|countdown|without.*warning)\b', lower)
+    imminent_m = re.search(r'\b(tomorrow|tonight|within\s+\d+\s+hours|at\s+\d{1,2}:\d{2}|deadline|countdown|without.{0,30}?warning)\b', lower)
     if imminent_m:
         indicators.append(ThreatIndicator(
             indicator_type="IMMINENCE_SIGNAL",
@@ -84,7 +84,7 @@ def detect_indicators(text: str) -> List[ThreatIndicator]:
         ))
 
     # 8. ESCALATION_SIGNAL
-    escalate_m = re.search(r'\b(tracking|watching you|know where you live|syndicate|follow.*home)\b', lower)
+    escalate_m = re.search(r'\b(tracking|watching you|know where you live|syndicate|follow.{0,40}?home)\b', lower)
     if escalate_m:
         indicators.append(ThreatIndicator(
             indicator_type="ESCALATION_SIGNAL",

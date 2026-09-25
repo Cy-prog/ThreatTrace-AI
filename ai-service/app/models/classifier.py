@@ -112,15 +112,44 @@ class ThreatClassifier:
 
         # Keyword heuristics boost for high-consequence edge cases
         lower = cleaned.lower()
-        if any(w in lower for w in ["bomb", "explosive", "detonate", "ied", "blast radius"]):
+        has_violent_marker = any(w in lower for w in [
+            "kill", "murder", "shoot", "gun", "bullet", "assault", "eliminate target",
+            "prepare to die", "massacre", "stab", "execute", "hostage"
+        ])
+        has_bomb_marker = any(w in lower for w in [
+            "bomb", "explosive", "detonate", "ied", "blast radius", "pipe bomb"
+        ])
+        has_weapon_marker = any(w in lower for w in [
+            "ar-15", "glock", "machete", "firearm", "ammunition", "rifle", "body armor"
+        ])
+        has_cyber_marker = any(w in lower for w in [
+            "ransomware", "zero-day", "exfiltrat", "scada", "ddos", "cobalt strike", "backdoor"
+        ])
+        has_extortion_marker = any(w in lower for w in [
+            "btc", "bitcoin", "ransom", "wire funds or else", "pay or else", "leak private"
+        ])
+        has_public_safety_marker = any(w in lower for w in [
+            "water reservoir", "toxic chemical", "power grid", "sabotage", "substation"
+        ])
+        has_self_harm_marker = any(w in lower for w in [
+            "end my life", "suicide", "swallow pills", "goodbye cruel world", "kill myself"
+        ])
+
+        if has_bomb_marker:
             target_class = "BOMB_THREAT"
-        elif any(w in lower for w in ["kill", "murder", "assault team", "prepare to die", "eliminate target"]):
+        elif has_violent_marker:
             target_class = "VIOLENT_THREAT"
-        elif any(w in lower for w in ["ransomware", "zero-day", "exfiltrat", "scada", "ddos"]):
+        elif has_weapon_marker:
+            target_class = "WEAPON_REFERENCE"
+        elif has_public_safety_marker:
+            target_class = "PUBLIC_SAFETY_THREAT"
+        elif has_cyber_marker:
             target_class = "CYBER_THREAT"
-        elif any(w in lower for w in ["btc", "bitcoin", "ransom", "wire funds or else"]):
+        elif has_extortion_marker:
             target_class = "EXTORTION"
-        elif any(w in lower for w in ["meeting", "lunch", "backup", "patch", "schedule"]):
+        elif has_self_harm_marker:
+            target_class = "SELF_HARM_SIGNAL"
+        elif not any([has_violent_marker, has_bomb_marker, has_weapon_marker, has_cyber_marker, has_extortion_marker, has_public_safety_marker, has_self_harm_marker]) and any(w in lower for w in ["meeting", "lunch", "backup", "patch", "schedule"]):
             target_class = "NON_THREAT"
         else:
             target_class = None

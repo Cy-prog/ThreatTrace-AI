@@ -108,6 +108,7 @@ export const ThreatDetails: React.FC = () => {
     a.href = url;
     a.download = `threat-report-${threat.threatReference}.json`;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   const handleExportCSV = () => {
@@ -121,6 +122,7 @@ export const ThreatDetails: React.FC = () => {
     a.href = url;
     a.download = `threat-summary-${threat.threatReference}.csv`;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   if (isLoading) {

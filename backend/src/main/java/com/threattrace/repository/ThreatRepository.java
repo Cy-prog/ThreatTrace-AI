@@ -16,6 +16,7 @@ public interface ThreatRepository extends JpaRepository<Threat, String> {
 
     Optional<Threat> findByThreatReference(String threatReference);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"analysis"})
     @Query("SELECT t FROM Threat t LEFT JOIN t.analysis a WHERE " +
            "(:query IS NULL OR LOWER(t.rawContent) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(t.threatReference) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
            "(:sourceType IS NULL OR t.sourceType = :sourceType) AND " +
@@ -47,9 +48,11 @@ public interface ThreatRepository extends JpaRepository<Threat, String> {
     @Query("SELECT COALESCE(AVG(a.riskScore), 0.0) FROM ThreatAnalysis a")
     double calculateAverageRiskScore();
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"analysis"})
     @Query("SELECT t FROM Threat t ORDER BY t.createdAt DESC")
     List<Threat> findRecentThreats(Pageable pageable);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"analysis"})
     @Query("SELECT t FROM Threat t WHERE t.geoVerified = true AND t.latitude IS NOT NULL AND t.longitude IS NOT NULL")
     List<Threat> findGeoVerifiedThreats();
 }

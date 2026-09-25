@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: ${DB_USER:-threattrace_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-threattrace_secure_pass_2026}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -32,7 +32,7 @@ services:
       - ENVIRONMENT=production
       - API_KEY=${AI_SERVICE_API_KEY:-ThreatTrace-Internal-AI-Key-2026-Secure}
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s

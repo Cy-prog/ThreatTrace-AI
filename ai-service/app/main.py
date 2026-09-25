@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config.settings import settings
@@ -6,18 +7,25 @@ from app.api.routes import health, analysis, models
 
 logger = setup_logger("threattrace_main")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION} in {settings.ENVIRONMENT} mode on port {settings.PORT}")
+    yield
+    logger.info(f"Shutting down {settings.APP_NAME}")
+
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="ThreatTrace AI Microservice for NLP threat classification, entity extraction, risk scoring, and correlation."
+    description="ThreatTrace AI Microservice for NLP threat classification, entity extraction, risk scoring, and correlation.",
+    lifespan=lifespan
 )
 
-# CORS Middleware
+# Hardened CORS Middleware with explicit trusted origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -25,10 +33,6 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(analysis.router)
 app.include_router(models.router)
-
-@app.on_event("startup")
-def on_startup():
-    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION} in {settings.ENVIRONMENT} mode on port {settings.PORT}")
 
 if __name__ == "__main__":
     import uvicorn

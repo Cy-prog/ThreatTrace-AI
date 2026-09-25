@@ -66,8 +66,8 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "User login and JWT token issuance")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
-        String clientIp = request.getRemoteAddr();
-        if (!rateLimiterService.allowRequest(clientIp)) {
+        String clientIp = RateLimiterService.resolveClientIp(request);
+        if (!rateLimiterService.allowRequest(clientIp, 20)) {
             auditService.record(loginRequest.getUsername(), "LOGIN_RATE_LIMITED", "AUTH", "login", clientIp, "{}");
             throw new RateLimitExceededException("Too many login requests. Please try again in one minute.");
         }
@@ -102,6 +102,12 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "Self-registration for new security analysts")
     public ResponseEntity<UserProfileResponse> register(@Valid @RequestBody RegisterRequest regRequest, HttpServletRequest request) {
+        String clientIp = RateLimiterService.resolveClientIp(request);
+        if (!rateLimiterService.allowRequest(clientIp + ":register", 5)) {
+            auditService.record(regRequest.getUsername(), "REGISTER_RATE_LIMITED", "AUTH", "register", clientIp, "{}");
+            throw new RateLimitExceededException("Too many registration attempts. Please try again in a few minutes.");
+        }
+
         if (userRepository.existsByUsername(regRequest.getUsername())) {
             throw new ValidationException("Username is already taken");
         }
@@ -122,7 +128,7 @@ public class AuthController {
         user.setRoles(Set.of(analystRole));
         User saved = userRepository.save(user);
 
-        auditService.record(saved.getUsername(), "USER_REGISTERED", "USER", saved.getId(), request.getRemoteAddr(), "{}");
+        auditService.record(saved.getUsername(), "USER_REGISTERED", "USER", saved.getId(), clientIp, "{}");
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new UserProfileResponse(saved.getId(), saved.getUsername(), saved.getEmail(), saved.getFullName(), List.of("ROLE_ANALYST")));
@@ -130,19 +136,26 @@ public class AuthController {
 
     @PostMapping("/refresh")
     @Operation(summary = "Refresh expired JWT access token")
-    public ResponseEntity<Map<String, String>> refresh(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<Map<String, String>> refresh(@RequestBody Map<String, String> payload, HttpServletRequest request) {
         String refreshToken = payload.get("refreshToken");
-        if (refreshToken == null || !tokenProvider.validateToken(refreshToken)) {
-            throw new ValidationException("Invalid refresh token");
+        if (refreshToken == null || !tokenProvider.validateRefreshToken(refreshToken)) {
+            throw new ValidationException("Invalid or non-refresh token supplied");
         }
 
         String username = tokenProvider.getUsernameFromToken(refreshToken);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ValidationException("User not found for refresh token"));
 
+        if (Boolean.FALSE.equals(user.getEnabled())) {
+            throw new ValidationException("User account is disabled");
+        }
+
         UserPrincipal principal = UserPrincipal.create(user);
         Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         String newAccessToken = tokenProvider.generateAccessToken(auth);
+
+        String clientIp = RateLimiterService.resolveClientIp(request);
+        auditService.record(username, "TOKEN_REFRESHED", "AUTH", principal.getId(), clientIp, "{}");
 
         return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
     }

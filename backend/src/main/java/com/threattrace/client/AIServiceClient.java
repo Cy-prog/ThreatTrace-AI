@@ -30,9 +30,13 @@ public class AIServiceClient {
 
     public AIServiceClient(
             @Value("${threattrace.ai-service.url:http://localhost:8000}") String aiServiceUrl,
-            @Value("${threattrace.ai-service.api-key:ThreatTrace-Internal-AI-Key-2026-Secure}") String aiServiceApiKey
+            @Value("${threattrace.ai-service.api-key:ThreatTrace-Internal-AI-Key-2026-Secure}") String aiServiceApiKey,
+            @Value("${threattrace.ai-service.timeout-ms:5000}") int timeoutMs
     ) {
-        this.restTemplate = new RestTemplate();
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(timeoutMs > 0 ? timeoutMs : 5000);
+        this.restTemplate = new RestTemplate(factory);
         this.objectMapper = new ObjectMapper();
         this.aiServiceUrl = aiServiceUrl;
         this.aiServiceApiKey = aiServiceApiKey;
@@ -204,7 +208,7 @@ public class AIServiceClient {
             risk += 10;
             String btcVal = btcMatcher.group(0);
             breakdown.add(new SignalBreakdownItem("Crypto Ransom Address", 10, "Cryptocurrency wallet detected"));
-            entities.add(new ThreatEntityDTO(UUID.randomUUID().toString(), "URL", btcVal, 0.99, btcMatcher.start(), btcMatcher.end(), btcVal));
+            entities.add(new ThreatEntityDTO(UUID.randomUUID().toString(), "CRYPTO_WALLET", btcVal, 0.99, btcMatcher.start(), btcMatcher.end(), btcVal));
         }
 
         risk = Math.min(100, risk);

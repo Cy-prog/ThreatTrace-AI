@@ -16,4 +16,5 @@ class HistoricalThreatItem(BaseModel):
 class ThreatCorrelateRequest(BaseModel):
     target_threat_id: str
     target_content: str
+    target_entities: List[str] = Field(default_factory=list, description="Target threat entities for entity-based correlation")
     corpus: List[HistoricalThreatItem] = Field(default_factory=list)

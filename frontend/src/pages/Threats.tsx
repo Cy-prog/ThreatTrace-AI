@@ -4,8 +4,8 @@ import { ThreatTable } from '../components/threats/ThreatTable';
 import { Loading } from '../components/common/Loading';
 import { EmptyState } from '../components/common/EmptyState';
 import { Button } from '../components/common/Button';
-import { threatsApi, ThreatFilterParams } from '../../src/api/threats';
-import { ThreatSummary } from '../../src/types/threat';
+import { threatsApi, ThreatFilterParams } from '../api/threats';
+import { ThreatSummary } from '../types/threat';
 import { Search, Filter, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const Threats: React.FC = () => {

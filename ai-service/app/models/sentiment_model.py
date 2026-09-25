@@ -19,12 +19,12 @@ class ThreatSentimentModel:
 
         lower = text.lower()
         
-        # Calculate Aggression signal
-        aggression_count = sum(1 for kw in AGGRESSION_KEYWORDS if kw in lower)
+        # Calculate Aggression signal with whole word boundaries
+        aggression_count = sum(1 for kw in AGGRESSION_KEYWORDS if re.search(r'\b' + re.escape(kw) + r'\b', lower))
         aggression_score = min(1.0, round(aggression_count * 0.25, 2))
 
-        # Calculate Urgency signal
-        urgency_count = sum(1 for kw in URGENCY_KEYWORDS if kw in lower)
+        # Calculate Urgency signal with whole word boundaries
+        urgency_count = sum(1 for kw in URGENCY_KEYWORDS if re.search(r'\b' + re.escape(kw) + r'\b', lower))
         urgency_score = min(1.0, round(urgency_count * 0.30, 2))
 
         # Label determination

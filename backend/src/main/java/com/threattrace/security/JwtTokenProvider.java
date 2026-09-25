@@ -59,6 +59,7 @@ public class JwtTokenProvider {
                 .claim("fullName", userPrincipal.getFullName())
                 .claim("email", userPrincipal.getEmail())
                 .claim("roles", roles)
+                .claim("tokenType", "ACCESS")
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(key)
@@ -79,23 +80,57 @@ public class JwtTokenProvider {
     }
 
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parser()
+        Claims claims = getClaims(token);
+        return claims.getSubject();
+    }
+
+    public String getTokenType(String token) {
+        try {
+            Claims claims = getClaims(token);
+            return claims.get("tokenType", String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return claims.getSubject();
     }
 
     public boolean validateToken(String token) {
+        return validateAccessToken(token);
+    }
+
+    public boolean validateAccessToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token);
+            Claims claims = getClaims(token);
+            String tokenType = claims.get("tokenType", String.class);
+            if ("REFRESH".equalsIgnoreCase(tokenType)) {
+                logger.warn("Access attempt rejected: Refresh token supplied where access token was required");
+                return false;
+            }
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            logger.warn("Invalid JWT token: {}", e.getMessage());
+            logger.warn("Invalid JWT access token: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean validateRefreshToken(String token) {
+        try {
+            Claims claims = getClaims(token);
+            String tokenType = claims.get("tokenType", String.class);
+            if (!"REFRESH".equalsIgnoreCase(tokenType)) {
+                logger.warn("Refresh attempt rejected: Token is not designated as REFRESH");
+                return false;
+            }
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            logger.warn("Invalid JWT refresh token: {}", e.getMessage());
             return false;
         }
     }

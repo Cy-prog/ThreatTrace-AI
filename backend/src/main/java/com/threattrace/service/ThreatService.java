@@ -112,7 +112,7 @@ public class ThreatService {
 
         // Record Audit Trail
         auditService.record(reporterUsername != null ? reporterUsername : "anonymous",
-                "THREAT_CREATED", "THREAT", savedThreat.getId(), "127.0.0.1",
+                "THREAT_CREATED", "THREAT", savedThreat.getId(), getClientIp(),
                 String.format("{\"reference\":\"%s\",\"category\":\"%s\",\"risk\":%d}",
                         reference, aiResult.getPredictedCategory(), aiResult.getRiskScore()));
 
@@ -121,9 +121,12 @@ public class ThreatService {
 
     @Transactional
     public void persistAnalysis(Threat threat, ThreatAnalysisDTO dto) {
-        // Remove existing analysis if re-analyzing
+        // Safely remove existing analysis if re-analyzing
         if (threat.getAnalysis() != null) {
-            analysisRepository.delete(threat.getAnalysis());
+            ThreatAnalysis oldAnalysis = threat.getAnalysis();
+            threat.setAnalysis(null);
+            analysisRepository.delete(oldAnalysis);
+            analysisRepository.flush();
         }
 
         ThreatAnalysis analysis = new ThreatAnalysis();
@@ -205,7 +208,7 @@ public class ThreatService {
         threat.setStatus("ANALYZED");
         Threat saved = threatRepository.save(threat);
 
-        auditService.record(actorUsername, "THREAT_REANALYZED", "THREAT", threat.getId(), "127.0.0.1", "{}");
+        auditService.record(actorUsername, "THREAT_REANALYZED", "THREAT", threat.getId(), getClientIp(), "{}");
 
         return mapToDetail(saved);
     }
@@ -218,7 +221,7 @@ public class ThreatService {
         threat.setStatus(request.getStatus());
         Threat saved = threatRepository.save(threat);
 
-        auditService.record(actorUsername, "THREAT_STATUS_UPDATED", "THREAT", id, "127.0.0.1",
+        auditService.record(actorUsername, "THREAT_STATUS_UPDATED", "THREAT", id, getClientIp(),
                 String.format("{\"new_status\":\"%s\"}", request.getStatus()));
 
         return mapToDetail(saved);
@@ -317,5 +320,15 @@ public class ThreatService {
         }
 
         return r;
+    }
+
+    private String getClientIp() {
+        try {
+            org.springframework.web.context.request.RequestAttributes attrs = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes servletAttrs) {
+                return com.threattrace.security.RateLimiterService.resolveClientIp(servletAttrs.getRequest());
+            }
+        } catch (Exception ignored) {}
+        return "127.0.0.1";
     }
 }

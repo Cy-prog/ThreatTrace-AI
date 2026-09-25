@@ -110,17 +110,22 @@ def calculate_risk_score(
             detail=f"Urgency score index {int(urgency_score * 100)}%"
         ))
 
-    # Floor and Cap between 0 and 100
-    final_score = max(0, min(100, total_score))
-
-    # Determine Severity Tier
-    if final_score >= 80:
-        severity = "CRITICAL"
-    elif final_score >= 60:
-        severity = "HIGH"
-    elif final_score >= 35:
-        severity = "MEDIUM"
-    else:
+    # Guard against benign non-threat score inflation
+    if category == "NON_THREAT" and not has_weapon and not has_demand:
+        final_score = min(15, total_score)
         severity = "LOW"
+    else:
+        # Floor and Cap between 0 and 100
+        final_score = max(0, min(100, total_score))
+
+        # Determine Severity Tier
+        if final_score >= 80:
+            severity = "CRITICAL"
+        elif final_score >= 60:
+            severity = "HIGH"
+        elif final_score >= 35:
+            severity = "MEDIUM"
+        else:
+            severity = "LOW"
 
     return final_score, severity, breakdown

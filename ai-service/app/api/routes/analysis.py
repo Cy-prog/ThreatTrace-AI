@@ -15,7 +15,7 @@ def analyze_threat(request: ThreatAnalysisRequest):
 def correlate_threat(request: ThreatCorrelateRequest):
     matches = correlate_with_corpus(
         target_text=request.target_content,
-        target_entities=[],
+        target_entities=request.target_entities,
         corpus=request.corpus
     )
     return CorrelationResponse(

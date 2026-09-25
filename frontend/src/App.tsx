@@ -1,22 +1,24 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './store/AuthContext';
-import { Landing } from './pages/Landing';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Dashboard } from './pages/Dashboard';
-import { Threats } from './pages/Threats';
-import { ThreatDetails } from './pages/ThreatDetails';
-import { Investigations } from './pages/Investigations';
-import { InvestigationDetails } from './pages/InvestigationDetails';
-import { Alerts } from './pages/Alerts';
-import { ThreatMapPage } from './pages/ThreatMapPage';
-import { CorrelationsPage } from './pages/CorrelationsPage';
-import { Analytics } from './pages/Analytics';
-import { ModelIntelligence } from './pages/ModelIntelligence';
-import { AuditLogs } from './pages/AuditLogs';
-import { UsersPage } from './pages/Users';
-import { SettingsPage } from './pages/Settings';
+
+// Lazy-loaded pages for high-performance code-splitting
+const Landing = lazy(() => import('./pages/Landing').then(m => ({ default: m.Landing })));
+const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const Register = lazy(() => import('./pages/Register').then(m => ({ default: m.Register })));
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Threats = lazy(() => import('./pages/Threats').then(m => ({ default: m.Threats })));
+const ThreatDetails = lazy(() => import('./pages/ThreatDetails').then(m => ({ default: m.ThreatDetails })));
+const Investigations = lazy(() => import('./pages/Investigations').then(m => ({ default: m.Investigations })));
+const InvestigationDetails = lazy(() => import('./pages/InvestigationDetails').then(m => ({ default: m.InvestigationDetails })));
+const Alerts = lazy(() => import('./pages/Alerts').then(m => ({ default: m.Alerts })));
+const ThreatMapPage = lazy(() => import('./pages/ThreatMapPage').then(m => ({ default: m.ThreatMapPage })));
+const CorrelationsPage = lazy(() => import('./pages/CorrelationsPage').then(m => ({ default: m.CorrelationsPage })));
+const Analytics = lazy(() => import('./pages/Analytics').then(m => ({ default: m.Analytics })));
+const ModelIntelligence = lazy(() => import('./pages/ModelIntelligence').then(m => ({ default: m.ModelIntelligence })));
+const AuditLogs = lazy(() => import('./pages/AuditLogs').then(m => ({ default: m.AuditLogs })));
+const UsersPage = lazy(() => import('./pages/Users').then(m => ({ default: m.UsersPage })));
+const SettingsPage = lazy(() => import('./pages/Settings').then(m => ({ default: m.SettingsPage })));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: string }> = ({
   children,
@@ -47,7 +49,15 @@ export const App: React.FC = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
+        <Suspense
+          fallback={
+            <div className="h-screen w-screen bg-background flex flex-col items-center justify-center font-mono text-cyan-400 gap-3">
+              <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs tracking-wider">INITIALIZING DOSSIER WORKSPACE...</span>
+            </div>
+          }
+        >
+          <Routes>
           {/* Public Pages */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -162,7 +172,8 @@ export const App: React.FC = () => {
           {/* Catch-all redirect */}
           <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
         </Routes>
-      </BrowserRouter>
+      </Suspense>
+    </BrowserRouter>
     </AuthProvider>
   );
 };

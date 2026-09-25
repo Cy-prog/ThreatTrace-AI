@@ -53,7 +53,7 @@ class ThreatNERModel:
 
         # 3. Crypto / Wallet addresses
         for m in self.btc_pattern.finditer(text):
-            add_entity("URL", m.group(0), m.start(), m.end(), 0.99)
+            add_entity("CRYPTO_WALLET", m.group(0), m.start(), m.end(), 0.99)
 
         # 4. Phone numbers
         for m in self.phone_pattern.finditer(text):
