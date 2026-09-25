@@ -30,6 +30,8 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+      - key: PORT
+        value: 8080
       - key: SERVER_PORT
         value: 8080
       - key: JWT_SECRET
@@ -42,7 +44,7 @@ services:
         fromService:
           type: web
           name: threattrace-ai-service
-          property: host
+          property: hostport
       - key: AI_SERVICE_API_KEY
         fromService:
           type: web

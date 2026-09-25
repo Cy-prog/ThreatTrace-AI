@@ -34,11 +34,12 @@ USER threattrace
 
 ENV SPRING_PROFILES_ACTIVE=prod \
     SERVER_PORT=8080 \
-    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+    PORT=8080 \
+    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseSerialGC -Xms128m -Xmx350m -XX:MaxMetaspaceSize=128m -Djava.security.egd=file:/dev/./urandom"
 
-EXPOSE 8080
+EXPOSE 8080 10000
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8080}/actuator/health || exit 1
 
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar app.jar"]

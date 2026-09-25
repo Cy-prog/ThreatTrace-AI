@@ -40,11 +40,16 @@ public class AIServiceClient {
         this.objectMapper = new ObjectMapper();
         String normalizedUrl = aiServiceUrl != null ? aiServiceUrl.trim() : "http://localhost:8000";
         if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
-            if (normalizedUrl.contains(":8000") || normalizedUrl.contains("localhost")) {
-                normalizedUrl = "http://" + normalizedUrl;
-            } else {
+            if (normalizedUrl.contains(".onrender.com") || normalizedUrl.contains(".com") || normalizedUrl.contains(".io")) {
                 normalizedUrl = "https://" + normalizedUrl;
+            } else {
+                normalizedUrl = "http://" + normalizedUrl;
             }
+        }
+        int schemeEnd = normalizedUrl.indexOf("//");
+        int portColonIndex = schemeEnd != -1 ? normalizedUrl.indexOf(':', schemeEnd + 2) : normalizedUrl.indexOf(':');
+        if (portColonIndex == -1 && !normalizedUrl.contains(".com") && !normalizedUrl.contains(".io")) {
+            normalizedUrl = normalizedUrl + ":8000";
         }
         this.aiServiceUrl = normalizedUrl.endsWith("/") ? normalizedUrl.substring(0, normalizedUrl.length() - 1) : normalizedUrl;
         this.aiServiceApiKey = aiServiceApiKey;
