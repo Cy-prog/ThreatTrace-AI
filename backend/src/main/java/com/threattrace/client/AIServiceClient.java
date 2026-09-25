@@ -37,6 +37,7 @@ public class AIServiceClient {
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(timeoutMs > 0 ? timeoutMs : 5000);
         this.restTemplate = new RestTemplate(factory);
+        this.objectMapper = new ObjectMapper();
         String normalizedUrl = aiServiceUrl != null ? aiServiceUrl.trim() : "http://localhost:8000";
         if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
             if (normalizedUrl.contains(":8000") || normalizedUrl.contains("localhost")) {
