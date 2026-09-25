@@ -21,10 +21,11 @@ app = FastAPI(
 )
 
 # Hardened CORS Middleware with explicit trusted origins
+is_wildcard = "*" in settings.ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=not is_wildcard,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
